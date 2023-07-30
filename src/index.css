@@ -50,6 +50,11 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+button:disabled {
+  pointer-events: none;
+  cursor: default;
+}
+
 .hidden-file-input {
   display: none;
 }
@@ -61,6 +66,10 @@ h2 {
 .p-default {
   margin-top: 10px;
   margin-bottom: 0;
+}
+.p-green {
+  color: #4bda4b;
+  font-weight: 500;
 }
 .p-default + .p-default {
   margin-top: 0;

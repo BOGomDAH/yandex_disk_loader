@@ -6,6 +6,8 @@ import image from "../../assets/file.jpg";
 import {getAccessTokenFromUrl} from "../../utils/getAccessTokenFromUrl.js";
 
 const Main = () => {
+    const [loading, setLoading] = useState(false);
+    const [showNotification, setShowNotification] = useState(false);
     const [maxFiles, setMaxFiles] = useState(100);
     const [path, setPath] = useState('uploadedFiles');
     const [selectedFiles, setSelectedFiles] = useState([]);
@@ -22,16 +24,20 @@ const Main = () => {
 
     const handleLoad = async () => {
         const folderName = path === "" ? 'uploadedFiles' : path
+        setLoading(true);
         try {
             await $api.get(`?path=${encodeURIComponent(folderName)}`)
 
             for (const fileData of selectedFiles) {
                 const getResponse = await $api.get(`/upload?path=${encodeURIComponent(  folderName + '/' + fileData.name)}`);
                 await axios.put(getResponse.data.href, fileData)
+                await setSelectedFiles(prevFiles => prevFiles.filter(file => file.name !== fileData.name));
             }
-
+            setLoading(false);
+            showSuccessNotification()
         } catch (error) {
             console.error("Ошибка при загрузке на Яндекс.Диск:", error.response);
+            setLoading(false);
         }
     }
 
@@ -57,9 +63,20 @@ const Main = () => {
         }
     }
 
+    const showSuccessNotification = () => {
+        setShowNotification(true);
+        setTimeout(() => {
+            setShowNotification(false);
+        }, 3000);
+    };
+
     return (
         <div>
-            <h2>{selectedFiles.length ? `Выбранные файлы (${selectedFiles.length}) : ` : 'Выберите файлы'}</h2>
+            <h2>{
+                selectedFiles.length
+                ? `Выбранные файлы (${selectedFiles.length}) : `
+                : 'Выберите файлы'}
+            </h2>
             <input
                 type="text"
                 className="path"
@@ -83,10 +100,23 @@ const Main = () => {
                     )
                 })}
             </ul>
+            {showNotification && (
+                <p className="p-default p-green">Файлы успешно загружены!</p>
+            )}
             <p className="p-default">Максимальное количество файлов: {maxFiles}</p>
             <label htmlFor="file_loader">Выбрать файлы</label>
-            <input type="file" id="file_loader" className="hidden-file-input" multiple onChange={(e) => handleFileChange(e, maxFiles)} />
-            {selectedFiles.length ? <button onClick={handleLoad}>Загрузить на Яндекс.Диск</button> : null}
+            <input
+                type="file"
+                id="file_loader"
+                className="hidden-file-input"
+                multiple
+                onChange={(e) => handleFileChange(e, maxFiles)}
+            />
+            {selectedFiles.length > 0 && (
+                <button disabled={loading} onClick={handleLoad}>
+                    {loading ? 'Загрузка файлов...' : 'Загрузить на Яндекс.Диск'}
+                </button>
+            )}
         </div>
     );
 };
